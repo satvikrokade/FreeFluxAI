@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { FieldError } from '@/components/ui/field-error'
 import { CardSkeleton } from '@/components/ui/skeleton'
 import { useI18n } from '@/i18n'
 
@@ -50,6 +51,7 @@ export default function PremiumPage() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
   const [keyInput, setKeyInput] = useState('')
+  const [activateAttempted, setActivateAttempted] = useState(false)
 
   const { data, isLoading } = useQuery<PremiumStatus>({
     queryKey: ['premium'],
@@ -205,7 +207,12 @@ export default function PremiumPage() {
                 className="flex flex-wrap items-end gap-3"
                 onSubmit={(e) => {
                   e.preventDefault()
-                  if (keyInput.trim()) activate.mutate(keyInput.trim())
+                  if (!keyInput.trim()) {
+                    setActivateAttempted(true)
+                    return
+                  }
+                  setActivateAttempted(false)
+                  activate.mutate(keyInput.trim())
                 }}
               >
                 <div className="space-y-1.5 flex-1 min-w-[260px]">
@@ -216,9 +223,11 @@ export default function PremiumPage() {
                     placeholder="fla_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                     className="font-mono text-xs"
                     autoComplete="off"
+                    aria-invalid={activateAttempted && !keyInput.trim()}
                   />
+                  {activateAttempted && !keyInput.trim() && <FieldError error={t('validation.required')} />}
                 </div>
-                <Button type="submit" size="sm" disabled={!keyInput.trim() || activate.isPending}>
+                <Button type="submit" size="sm" disabled={activate.isPending}>
                   {activate.isPending ? t('premium.activating') : t('premium.activate')}
                 </Button>
               </form>

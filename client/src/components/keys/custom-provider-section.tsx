@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { FieldError } from '@/components/ui/field-error'
+import { isHttpUrl } from '@/lib/validate'
 import { useI18n } from '@/i18n'
 
 // Split a free-text model field on commas / newlines into a clean id list,
@@ -31,6 +33,16 @@ export function CustomProviderSection() {
   const models = customType === 'chat' ? parseModelList(model) : [model.trim()].filter(Boolean)
   const multiple = customType === 'chat' && models.length > 1
 
+  // Field-level validation: submit stays clickable and reveals what is
+  // missing instead of being silently disabled.
+  const [attempted, setAttempted] = useState(false)
+  const baseUrlError = !baseUrl.trim()
+    ? t('validation.required')
+    : !isHttpUrl(baseUrl)
+      ? t('validation.url')
+      : null
+  const modelError = models.length === 0 ? t('validation.required') : null
+
   const { data: embeddingsData } = useQuery<{ families: { family: string }[] }>({
     queryKey: ['embeddings'],
     queryFn: () => apiFetch('/api/embeddings'),
@@ -55,7 +67,11 @@ export function CustomProviderSection() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!baseUrl || models.length === 0) return
+    if (baseUrlError || modelError) {
+      setAttempted(true)
+      return
+    }
+    setAttempted(false)
     const common = {
       baseUrl,
       model: models[0],
@@ -130,7 +146,9 @@ export function CustomProviderSection() {
             onChange={e => setBaseUrl(e.target.value)}
             placeholder="http://127.0.0.1:11434/v1"
             className="font-mono text-xs"
+            aria-invalid={attempted && !!baseUrlError}
           />
+          {attempted && <FieldError error={baseUrlError} />}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">{customType === 'chat' ? t('keys.customModels') : t('keys.customModel')}</Label>
@@ -140,7 +158,9 @@ export function CustomProviderSection() {
             placeholder={modelPlaceholder}
             rows={customType === 'chat' ? 2 : 1}
             className="w-[200px] font-mono text-xs"
+            aria-invalid={attempted && !!modelError}
           />
+          {attempted && <FieldError error={modelError} />}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">{t('keys.customDisplayName')}</Label>
@@ -173,7 +193,7 @@ export function CustomProviderSection() {
             className="w-[150px] font-mono text-xs"
           />
         </div>
-        <Button type="submit" size="sm" disabled={!baseUrl || models.length === 0 || addCustom.isPending}>
+        <Button type="submit" size="sm" disabled={addCustom.isPending}>
           {addCustom.isPending ? t('keys.addingCustom') : addLabel}
         </Button>
       </form>

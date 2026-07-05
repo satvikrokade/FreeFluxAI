@@ -518,5 +518,11 @@
       "cooldown": "冷却中",
       "recent_errors": "失败中"
     }
+  },
+  "validation": {
+    "required": "必填",
+    "url": "请输入以 http:// 或 https:// 开头的有效 URL",
+    "email": "请输入有效的邮箱地址",
+    "passwordMin": "至少 {min} 个字符"
   }
 }

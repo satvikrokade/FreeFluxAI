@@ -518,5 +518,11 @@
       "cooldown": "en cooldown",
       "recent_errors": "en échec"
     }
+  },
+  "validation": {
+    "required": "Obligatoire",
+    "url": "Saisissez une URL valide commençant par http:// ou https://",
+    "email": "Saisissez une adresse e-mail valide",
+    "passwordMin": "Au moins {min} caractères"
   }
 }

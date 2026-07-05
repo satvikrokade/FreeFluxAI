@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/page-header'
 import type { ApiKey, ApiKeyModel, Platform } from '../../../shared/types'
 import { ChevronDown, KeyRound, Pencil, Trash2 } from 'lucide-react'
 import { EmptyState } from '@/components/empty-state'
+import { FieldError } from '@/components/ui/field-error'
 import { TableSkeleton } from '@/components/ui/skeleton'
 import { formatSqliteUtcToLocalTime } from '@/lib/utils'
 import { useI18n } from '@/i18n'
@@ -171,11 +172,20 @@ export default function KeysPage() {
   const needsAccountId = platform === 'cloudflare'
   const isKeyless = PLATFORMS.find(p => p.value === platform)?.keyless ?? false
 
+  // Field-level validation: the submit stays clickable and reveals what is
+  // missing instead of being silently disabled.
+  const [addAttempted, setAddAttempted] = useState(false)
+  const platformError = !platform ? t('validation.required') : null
+  const keyError = !isKeyless && !apiKey.trim() ? t('validation.required') : null
+  const accountIdError = needsAccountId && !accountId.trim() ? t('validation.required') : null
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!platform) return
-    if (!isKeyless && !apiKey) return
-    if (needsAccountId && !accountId) return
+    if (platformError || keyError || accountIdError) {
+      setAddAttempted(true)
+      return
+    }
+    setAddAttempted(false)
     // Keyless providers submit an empty key; the backend stores a sentinel.
     const key = isKeyless ? '' : (needsAccountId ? `${accountId}:${apiKey}` : apiKey)
     addKey.mutate({ platform, key, label: label || undefined })
@@ -253,7 +263,7 @@ export default function KeysPage() {
             <div className="space-y-1.5">
               <Label className="text-xs">{t('keys.platform')}</Label>
               <Select value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
-                <SelectTrigger className="w-[220px]">
+                <SelectTrigger className="w-[220px]" aria-invalid={addAttempted && !!platformError}>
                   <SelectValue placeholder={t('keys.selectPlatform')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,6 +272,7 @@ export default function KeysPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {addAttempted && <FieldError error={platformError} />}
               {(() => {
                 const sel = PLATFORMS.find(p => p.value === platform)
                 return sel?.url ? <div className="pt-0.5"><GetKeyLink url={sel.url} /></div> : null
@@ -275,7 +286,9 @@ export default function KeysPage() {
                   onChange={e => setAccountId(e.target.value)}
                   placeholder="a1b2c3d4…"
                   className="w-[200px] font-mono text-xs"
+                  aria-invalid={addAttempted && !!accountIdError}
                 />
+                {addAttempted && <FieldError error={accountIdError} />}
               </div>
             )}
             <div className="space-y-1.5 flex-1 min-w-[240px]">
@@ -287,7 +300,9 @@ export default function KeysPage() {
                 placeholder={isKeyless ? t('keys.noKeyNeededPlaceholder') : (needsAccountId ? t('keys.bearerTokenPlaceholder') : t('keys.pasteKeyPlaceholder'))}
                 className="font-mono text-xs"
                 disabled={isKeyless}
+                aria-invalid={addAttempted && !!keyError}
               />
+              {addAttempted && <FieldError error={keyError} />}
               {isKeyless && (
                 <p className="text-[11px] text-muted-foreground">
                   {t('keys.keylessHint')}
@@ -303,7 +318,7 @@ export default function KeysPage() {
                   placeholder={t('keys.customDisplayNameOptional')}
                   className="w-[160px]"
                 />
-                <Button type="submit" size="sm" disabled={!platform || (!isKeyless && !apiKey) || (needsAccountId && !accountId) || addKey.isPending}>
+                <Button type="submit" size="sm" disabled={addKey.isPending}>
                   {addKey.isPending ? t('keys.adding') : isKeyless ? t('keys.enable') : t('keys.addKey')}
                 </Button>
               </div>

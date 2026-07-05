@@ -518,5 +518,11 @@
     "groupActions": "Actions",
     "groupModels": "Models",
     "toggleTheme": "Toggle dark mode"
+  },
+  "validation": {
+    "required": "Required",
+    "url": "Enter a valid URL starting with http:// or https://",
+    "email": "Enter a valid email address",
+    "passwordMin": "At least {min} characters"
   }
 }
