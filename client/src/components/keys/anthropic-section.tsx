@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, getApiOrigin } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useI18n } from '@/i18n'
@@ -26,9 +26,7 @@ export function AnthropicSection() {
 
   // Anthropic clients append `/v1/messages` to the base URL, so they want the
   // bare origin (OpenAI clients use origin + /v1, shown in the key section).
-  const origin = import.meta.env.DEV
-    ? `http://${window.location.hostname}:${__SERVER_PORT__}`
-    : window.location.origin
+  const origin = getApiOrigin()
 
   const { data: mapData } = useQuery<{ map: AnthropicMap }>({
     queryKey: ['anthropic-map'],

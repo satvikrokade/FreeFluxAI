@@ -1,5 +1,18 @@
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 const TOKEN_KEY = 'freellmapi_dashboard_token';
+
+export function getApiOrigin(): string {
+  const configured = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
+  if (configured) {
+    return configured;
+  }
+  return import.meta.env.DEV
+    ? `http://${window.location.hostname}:${__SERVER_PORT__}`
+    : window.location.origin;
+}
+
+export function getApiBaseUrl(): string {
+  return `${getApiOrigin()}/v1`;
+}
 
 // Dashboard session token (#35). Stored in localStorage; sent as a Bearer on
 // every /api request and cleared on a 401.
@@ -32,7 +45,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${getApiOrigin()}${path}`, {
     // `...options` first so an explicit method/body/signal applies, but headers
     // are merged last — otherwise an options.headers would clobber the
     // Content-Type and Authorization we set here.
