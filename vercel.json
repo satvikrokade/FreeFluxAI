@@ -1,11 +1,23 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "npm run build -w client",
+  "buildCommand": "npm run build",
   "outputDirectory": "client/dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/v1/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/mcp/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/((?!api/|v1/|mcp/).*)",
       "destination": "/index.html"
     }
   ]
