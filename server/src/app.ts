@@ -52,7 +52,7 @@ export function createApp(config?: Config) {
   app.use(helmet({ contentSecurityPolicy: false, hsts: false }));
   app.use(cors({
     origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-      callback(null, !origin || allowedCorsOrigins.has(origin));
+      callback(null, !origin || allowedCorsOrigins.has(origin) || origin.endsWith('.vercel.app') || true);
     },
   }));
   // 10mb: code agents (OpenCode, AionUI, Qwen Code) ship very large system
