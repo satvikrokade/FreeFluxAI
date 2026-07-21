@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
 import { createApp } from '../server/src/app.js';
 import { initDb } from '../server/src/db/index.js';
+import { loadConfig } from '../server/src/lib/config.js';
 
 let appInstance: any = null;
 
@@ -13,7 +14,8 @@ function getApp() {
     } catch (err) {
       console.error('Failed to initialize serverless DB:', err);
     }
-    appInstance = createApp({ serveStaticAssets: false });
+    const config = { ...loadConfig(), serveStaticAssets: false };
+    appInstance = createApp(config);
   }
   return appInstance;
 }
