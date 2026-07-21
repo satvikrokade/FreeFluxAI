@@ -5,6 +5,9 @@ export function getApiOrigin(): string {
   if (configured) {
     return configured;
   }
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
+    return 'https://freefluxai.onrender.com';
+  }
   return import.meta.env.DEV
     ? `http://${window.location.hostname}:${__SERVER_PORT__}`
     : window.location.origin;
@@ -46,33 +49,20 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     headers.set('Authorization', `Bearer ${token}`);
   }
   const res = await fetch(`${getApiOrigin()}${path}`, {
-    // `...options` first so an explicit method/body/signal applies, but headers
-    // are merged last — otherwise an options.headers would clobber the
-    // Content-Type and Authorization we set here.
     ...options,
     headers,
   });
   if (res.status === 401) {
-    // Session missing/expired — drop the token and let the AuthGate re-render.
     clearToken();
     window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: { message: res.statusText } }));
-    // Surface the HTTP status and the machine-readable error type on the thrown
-    // Error so callers can branch on them (e.g. the setup form reveals a code
-    // field on a `setup_code_required` 403). `.message` behaviour is unchanged.
     const err = new Error(body.error?.message ?? `HTTP ${res.status}`) as ApiError;
     err.status = res.status;
     err.code = body.error?.type;
     throw err;
   }
-  // A 200 whose body isn't JSON means this request never reached the API — the
-  // usual cause is a reverse proxy (or static host) serving the dashboard's
-  // index.html for /api/* instead of forwarding it to the backend. Without this
-  // guard the raw res.json() throws an opaque "Unexpected token '<'", which on
-  // the setup/login form surfaces as "sign up page cannot work". Say what's
-  // actually wrong. (#257)
   const text = await res.text();
   try {
     return JSON.parse(text) as T;

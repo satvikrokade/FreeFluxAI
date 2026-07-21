@@ -50,11 +50,7 @@ export function createApp(config?: Config) {
   // stay disabled unless someone serves the proxy over HTTPS publicly
   // (which is also not a supported deployment — see README).
   app.use(helmet({ contentSecurityPolicy: false, hsts: false }));
-  app.use(cors({
-    origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-      callback(null, !origin || allowedCorsOrigins.has(origin) || origin.endsWith('.vercel.app') || true);
-    },
-  }));
+  app.use(cors({ origin: true, credentials: true }));
   // 10mb: code agents (OpenCode, AionUI, Qwen Code) ship very large system
   // prompts + tool schemas + repo context; 1mb cut their sessions off
   // mid-conversation with an opaque 413. (#200)
