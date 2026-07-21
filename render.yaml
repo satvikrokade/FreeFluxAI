@@ -6,8 +6,8 @@ services:
     buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     envVars:
-      - key: PORT
-        value: 3001
+      - key: HOST
+        value: "0.0.0.0"
       - key: NODE_ENV
         value: production
       - key: ENCRYPTION_KEY
