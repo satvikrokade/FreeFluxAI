@@ -93,9 +93,6 @@ export function initEncryptionKey(db: Db): void {
     return;
   }
 
-  if (!isDevFallbackAllowed()) {
-    throw missingKeyError();
-  }
 
   const keyFile = keyFilePathFor(db);
 
